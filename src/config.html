@@ -14,12 +14,19 @@
                 <img src="https://raw.githubusercontent.com/meilisearch/meilisearch/refs/heads/main/assets/meilisearch-logo-dark.svg">
             </div>
             <div style="margin-bottom: 32px">
-                <h3>Status</h3>
+                <div style="display: inline-flex; align-items: center;justify-content: center">
+                    <span style="font-size: 24px">Status</span>
+                    <button class="emby-input-iconbutton paper-icon-button-light" id="meilisearch-refresh-status-button"
+                            is="paper-icon-button-light" title="refresh"
+                            type="button">
+                        <span aria-hidden="true" class="material-icons refresh"></span>
+                    </button>
+                </div>
                 <pre id="status"
-                     style="background: #fff1; padding: 16px; font-family: 'JetBrains Mono','JetBrainsMono NF',Consolas,monospace">unknown</pre>
+                     style="background: #fff1; margin-top: 0; padding: 16px; font-family: 'JetBrains Mono','JetBrainsMono NF',Consolas,monospace">unknown</pre>
             </div>
 
-            <h3>Config</h3>
+            <span style="font-size: 24px">Config</span>
             <form id="MeilisearchConfigForm">
                 <div class="inputContainer">
                     <label class="inputLabel inputLabelUnfocused" for="Url">Meilisearch URL</label>
@@ -51,6 +58,14 @@
     <script type="text/javascript">
         (() => {
             const id = '974395db-b31d-46a2-bc86-ef9aa5ac04dd';
+            const updateStatus = () => {
+                ApiClient.get('/meilisearch/status').then(r => r.json()).then(status => {
+                    document.querySelector('#status').innerText = Object.keys(status).map(k => k + ': ' + status[k]).join('\n');
+                })
+            }
+
+            document.querySelector('#meilisearch-refresh-status-button')
+                .addEventListener('click', updateStatus);
 
             document.querySelector('#MeilisearchConfigPage')
                 .addEventListener('pageshow', function () {
@@ -62,9 +77,7 @@
                         document.querySelector('#IndexName').value = config.IndexName;
                         Dashboard.hideLoadingMsg();
                     });
-                    ApiClient.get('/meilisearch/status').then(r => r.json()).then(status => {
-                        document.querySelector('#status').innerText = Object.keys(status).map(k => k + ': ' + status[k]).join('\n');
-                    })
+                    updateStatus()
                 });
 
             document.querySelector('#MeilisearchConfigForm')

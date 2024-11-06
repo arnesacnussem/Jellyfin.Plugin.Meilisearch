@@ -10,6 +10,11 @@ public class Controller(ILogger<Controller> logger, MeilisearchClientHolder clie
     [HttpGet("status")]
     public Task<IActionResult> GetStatus()
     {
+        if (!clientHolder.Ok)
+        {
+            Plugin.Instance?.TryCreateMeilisearchClient().Wait();
+        }
+
         return Task.FromResult<IActionResult>(new JsonResult(new
         {
             db = Plugin.Instance?.DbPath,

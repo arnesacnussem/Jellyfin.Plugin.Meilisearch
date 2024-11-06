@@ -3,7 +3,6 @@ using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
-using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Extensions.Logging;
 
@@ -14,7 +13,6 @@ public class Plugin : BasePlugin<Config>, IHasWebPages
 {
     private readonly MeilisearchClientHolder _clientHolder;
     public readonly Indexer Indexer;
-    private EventHandler<BasePluginConfiguration> ReloadMeilisearch { get; set; }
 
     public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILogger<Plugin> logger,
         IServiceProvider serviceProvider,
@@ -37,6 +35,8 @@ public class Plugin : BasePlugin<Config>, IHasWebPages
         TryCreateMeilisearchClient().Wait();
         TryAddFilter(provider, serviceProvider);
     }
+
+    private EventHandler<BasePluginConfiguration> ReloadMeilisearch { get; }
 
     public string DbPath { get; }
 
@@ -82,7 +82,7 @@ public class Plugin : BasePlugin<Config>, IHasWebPages
             ReloadMeilisearch?.Invoke(this, configuration);
     }
 
-    private async Task TryCreateMeilisearchClient()
+    public async Task TryCreateMeilisearchClient()
     {
         await _clientHolder.Set(Configuration);
         await Indexer.Index();
