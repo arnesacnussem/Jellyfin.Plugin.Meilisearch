@@ -8,7 +8,6 @@ public record MeilisearchItem(
     string? Overview,
     string? OriginalTitle,
     string? SeriesName,
-    string? SortName,
     int? ProductionYear,
     string[]? Artists,
     string[]? AlbumArtists,

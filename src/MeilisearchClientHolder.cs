@@ -54,10 +54,7 @@ public class MeilisearchClientHolder(ILogger<MeilisearchClientHolder> logger, IS
 
         var task = Client.HealthAsync();
         task.Wait();
-        if (task.IsCompletedSuccessfully)
-            Status = $"Server: {task.Result.Status}";
-        else
-            Status = $"Error: {task.Exception?.Message}" ?? "Unknown error";
+        Status = task.IsCompletedSuccessfully ? $"Server: {task.Result.Status}" : $"Error: {task.Exception?.Message}";
     }
 
     private async Task<Index> GetIndex(MeilisearchClient meilisearch)
@@ -73,14 +70,14 @@ public class MeilisearchClientHolder(ILogger<MeilisearchClientHolder> logger, IS
 
         // Set sortable attributes
         await index.UpdateSortableAttributesAsync(
-            ["communityRating", "criticRating", "sortName"]
+            ["communityRating", "criticRating"]
         );
 
         // Change priority of fields; Meilisearch always uses camel case!
         await index.UpdateSearchableAttributesAsync(
             [
                 "name", "artists", "albumArtists", "originalTitle", "productionYear", "seriesName", "genres", "tags",
-                "studios", "overview", "sortName"
+                "studios", "overview"
             ]
         );
 
@@ -88,7 +85,7 @@ public class MeilisearchClientHolder(ILogger<MeilisearchClientHolder> logger, IS
         await index.UpdateDisplayedAttributesAsync(
             [
                 "guid", "name", "albumArtists", "originalTitle", "productionYear", "seriesName", "genres", "tags",
-                "studios", "overview", "sortName"
+                "studios", "overview"
             ]
         );
 
