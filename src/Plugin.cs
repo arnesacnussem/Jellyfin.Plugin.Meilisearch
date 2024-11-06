@@ -1,5 +1,4 @@
 ﻿using System.Globalization;
-using Jellyfin.Plugin.Meilisearch.hack;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Plugins;
@@ -7,7 +6,6 @@ using MediaBrowser.Model.Serialization;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
 
 namespace Jellyfin.Plugin.Meilisearch;
 
@@ -16,6 +14,7 @@ public class Plugin : BasePlugin<Config>, IHasWebPages
 {
     private readonly MeilisearchClientHolder _clientHolder;
     public readonly Indexer Indexer;
+    private EventHandler<BasePluginConfiguration> ReloadMeilisearch { get; set; }
 
     public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILogger<Plugin> logger,
         IServiceProvider serviceProvider,
@@ -30,9 +29,9 @@ public class Plugin : BasePlugin<Config>, IHasWebPages
         logger.LogInformation("db_path={DB}", DbPath);
         Instance = this;
 
-        ConfigurationChanged += (_, _) =>
+        ReloadMeilisearch += (_, _) =>
         {
-            logger.LogInformation("Configuration changed");
+            logger.LogInformation("Configuration changed, reloading meilisearch...");
             TryCreateMeilisearchClient().Wait();
         };
         TryCreateMeilisearchClient().Wait();
@@ -59,12 +58,13 @@ public class Plugin : BasePlugin<Config>, IHasWebPages
         ];
     }
 
-    private static void TryAddFilter(IActionDescriptorCollectionProvider provider, IServiceProvider serviceProvider)
+    private void TryAddFilter(IActionDescriptorCollectionProvider provider, IServiceProvider serviceProvider)
     {
-        provider.AddDynamicFilter<MeilisearchMutateFilter>(serviceProvider, delegate(ControllerActionDescriptor t)
+        provider.AddDynamicFilter<MeilisearchMutateFilter>(serviceProvider, t =>
         {
             var sig = $"{t.ControllerTypeInfo.FullName}#{t.MethodInfo.Name}";
-            Console.WriteLine($"\tmatcher: {sig}");
+            if (Configuration.Debug) Console.WriteLine($"\tmethod: {sig}");
+
             return sig == "Jellyfin.Api.Controllers.ItemsController#GetItems";
         });
     }
@@ -73,12 +73,13 @@ public class Plugin : BasePlugin<Config>, IHasWebPages
     {
         ArgumentNullException.ThrowIfNull(configuration);
         var config = (Config)configuration;
-        var needReload = Configuration.Url == config.Url && Configuration.ApiKey == config.ApiKey;
+        var skipReload = Configuration.Url == config.Url && Configuration.ApiKey == config.ApiKey;
 
         Configuration = config;
         SaveConfiguration(Configuration);
-        if (needReload)
-            ConfigurationChanged?.Invoke(this, configuration);
+        ConfigurationChanged?.Invoke(this, configuration);
+        if (!skipReload)
+            ReloadMeilisearch?.Invoke(this, configuration);
     }
 
     private async Task TryCreateMeilisearchClient()

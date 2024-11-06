@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Jellyfin.Plugin.Meilisearch.hack;
+namespace Jellyfin.Plugin.Meilisearch;
 
 public static class InjectActionFilter
 {
