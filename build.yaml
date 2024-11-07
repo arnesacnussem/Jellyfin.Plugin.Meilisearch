@@ -1,7 +1,7 @@
 ---
-name: "Meilisearch Plugin"
+name: "Meilisearch"
 guid: "974395db-b31d-46a2-bc86-ef9aa5ac04dd"
-version: "1.3.0.0"
+version: "1.7.0.0"
 targetAbi: "10.10.0.0"
 framework: "net8.0"
 overview: "Meilisearch Plugin"
